@@ -7,6 +7,7 @@ class ButtonNavigator extends StatelessWidget {
   final int buttonColor;
   final String? image;
   final double elevation;
+  final bool replace;
   
   const ButtonNavigator({
     super.key, 
@@ -16,6 +17,7 @@ class ButtonNavigator extends StatelessWidget {
     required this.buttonColor,
     this.image,
     this.elevation = 0.0,
+    this.replace = false,
   });
 
   @override
@@ -29,7 +31,11 @@ class ButtonNavigator extends StatelessWidget {
         height: 52,
         child: TextButton(
           onPressed: () {
-            Navigator.of(context).pushNamed(navigateTo);
+            if (replace) {
+              Navigator.of(context).pushReplacementNamed(navigateTo);
+            } else {
+              Navigator.of(context).pushNamed(navigateTo);
+            }
           },
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.all(Color(buttonColor)),

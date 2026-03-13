@@ -33,11 +33,12 @@ class SignUp extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: ButtonNavigator(
-              navigateTo: '/', 
+              navigateTo: '/app', 
               labelText: 'CONTINUE WITH GOOGLE', 
               labelColor: 0xFF3F414E, 
               buttonColor: 0xFFFFFFFF,
               image: 'google_logo.png',
+              replace: true,
               elevation: 0.5)),
               Text(
                 'OR LOG IN WITH EMAIL',
@@ -57,15 +58,12 @@ class SignUp extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsetsGeometry.only(top: 22, bottom: 20),
-              child: ButtonNavigator(navigateTo: '/', 
-              labelText: 'LOG IN', 
+              child: ButtonNavigator(navigateTo: '/app', 
+              labelText: 'SIGN UP', 
               labelColor: 0xFFFFFFFF, 
-              buttonColor: 0xFF8E97FD)
+              buttonColor: 0xFF8E97FD,
+              replace: true)
               ),
-              Text(
-                'Forgot Password?',
-                style: TextStyle(fontSize: 17),
-                ),
                 Expanded(child: Align(
                   alignment: AlignmentGeometry.bottomCenter,
                   child: Padding(padding: EdgeInsetsGeometry.only(bottom: 40),
