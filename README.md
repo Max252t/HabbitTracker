@@ -47,9 +47,3 @@
   - Android 6.0+ (API level 23)
 - **Устройство:** Наличие GPS, доступ к интернету
 
-## 🚀 Установка и запуск
-
-1. **Клонирование репозитория**
-   ```bash
-   git clone https://github.com/yourusername/habit_tracker.git
-   cd habit_tracker
