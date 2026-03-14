@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habbit_tracker/core/app_logger.dart';
 
 class ButtonNavigator extends StatelessWidget {
   final String navigateTo;
@@ -30,11 +31,23 @@ class ButtonNavigator extends StatelessWidget {
         width: 330,
         height: 52,
         child: TextButton(
-          onPressed: () {
-            if (replace) {
-              Navigator.of(context).pushReplacementNamed(navigateTo);
-            } else {
-              Navigator.of(context).pushNamed(navigateTo);
+          onPressed: () async {
+            appLogger.i(
+              '[NAV] ButtonNavigator "$labelText" -> $navigateTo (replace=$replace)',
+            );
+            try {
+              if (replace) {
+                await Navigator.of(context).pushReplacementNamed(navigateTo);
+              } else {
+                await Navigator.of(context).pushNamed(navigateTo);
+              }
+            } catch (e, st) {
+              appLogger.e('[NAV ERROR] "$labelText" -> $navigateTo', error: e, stackTrace: st);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Navigation error: $e')),
+                );
+              }
             }
           },
           style: ButtonStyle(

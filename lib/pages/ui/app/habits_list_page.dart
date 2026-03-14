@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:habbit_tracker/blocs/habits/habits_bloc.dart';
+import 'package:habbit_tracker/pages/ui/app/habit_editor_page.dart';
 
 class HabitsListPage extends StatelessWidget {
   const HabitsListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<HabitsBloc, HabitsState>(
+      builder: (context, state) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -23,8 +28,8 @@ class HabitsListPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF8E97FD),
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Добавление напоминалки: скоро')),
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HabitEditorPage()),
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
@@ -45,7 +50,7 @@ class HabitsListPage extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Здесь будет список напоминалок. Каждая: название, время/даты, радиус и статус.',
+                      'Нажми “+” чтобы создать напоминалку. Тап по элементу — редактирование.',
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
@@ -58,9 +63,17 @@ class HabitsListPage extends StatelessWidget {
             const SizedBox(height: 14),
             Expanded(
               child: ListView.separated(
-                itemCount: 3,
+                itemCount: state.items.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
+                  final item = state.items[index];
+                  final time = item.scheduledAt;
+                  String two(int v) => v.toString().padLeft(2, '0');
+                  final timeText = time == null
+                      ? 'время не задано'
+                      : '${two(time.day)}.${two(time.month)} ${two(time.hour)}:${two(time.minute)}';
+                  final hasPoint = item.latitude != null && item.longitude != null;
+
                   return Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.92),
@@ -68,14 +81,14 @@ class HabitsListPage extends StatelessWidget {
                     ),
                     child: ListTile(
                       title: Text(
-                        'Пример напоминалки #${index + 1}',
+                        item.title,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF3F414E),
                               fontWeight: FontWeight.w700,
                             ),
                       ),
                       subtitle: Text(
-                        'Время: 18:00 • Радиус: 150м • Статус: активна',
+                        'Когда: $timeText • Радиус: ${item.radiusMeters.toStringAsFixed(0)}м • Точка: ${hasPoint ? "выбрана" : "нет"}',
                         style: Theme.of(context)
                             .textTheme
                             .labelSmall
@@ -85,14 +98,14 @@ class HabitsListPage extends StatelessWidget {
                         icon: const Icon(Icons.delete_outline),
                         color: const Color(0xFF3F414E),
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Удаление: скоро')),
-                          );
+                          context.read<HabitsBloc>().add(HabitDeleted(item.id));
                         },
                       ),
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Редактирование: скоро')),
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => HabitEditorPage(initial: item),
+                          ),
                         );
                       },
                     ),
@@ -103,6 +116,8 @@ class HabitsListPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

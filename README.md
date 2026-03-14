@@ -1,16 +1,55 @@
-# habbit_tracker
+# habit_tracker
 
-A new Flutter project.
 
-## Getting Started
+Мобильное приложение для создания напоминаний, привязанных к геолокации. Помогает занятым людям не забывать о делах, которые нужно выполнить в определенных местах.
 
-This project is a starting point for a Flutter application.
+## 📱 О проекте
 
-A few resources to get you started if this is your first Flutter project:
+**Habit Tracker** - это кроссплатформенное приложение, решающее проблему временных напоминаний. Основная идея: напоминания должны срабатывать не только в определенное время, но и когда пользователь физически находится в нужном месте.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Например:
+- 🛒 "Купить хлеб, когда буду рядом с магазином"
+- 📞 "Позвонить маме, когда приду на работу"
+- 💊 "Забрать лекарство, когда буду рядом с аптекой"
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## ✨ Функциональность
+
+- ✅ **Создание гео-напоминаний** - задача привязывается к конкретной локации на карте
+- ⏰ **Временные параметры** - выбор времени и даты срабатывания
+- 🔁 **Повторение задач** - настройка регулярных напоминаний (ежедневно, по будням и т.д.)
+- 🗺️ **Интерактивная карта** - визуальный выбор места и просмотр задач на карте
+- 📋 **Управление задачами** - просмотр, редактирование и удаление напоминаний
+- 🔔 **Push-уведомления** - автоматическое срабатывание при входе в геозону в заданное время
+
+## 🏗️ Архитектура
+
+Проект построен с использованием **BLoC (Business Logic Component)** для управления состояниями, что обеспечивает:
+
+- Чистое разделение бизнес-логики и UI
+- Тестируемость кода
+- Предсказуемое управление состоянием
+
+### Технический стек
+
+- **Frontend:** Flutter (Dart)
+- **State Management:** BLoC
+- **Local Storage:** SQLite 
+- **Backend:** Supabase *(планируется)*
+- **Карты:** Yandex Maps*
+- **Геолокация:** `geolocator`, `geofencing` пакеты
+
+## 📋 Требования к окружению
+
+- **Flutter SDK:** 3.x или выше
+- **Dart SDK:** 3.x или выше
+- **Платформы:**
+  - iOS 14.0+
+  - Android 6.0+ (API level 23)
+- **Устройство:** Наличие GPS, доступ к интернету
+
+## 🚀 Установка и запуск
+
+1. **Клонирование репозитория**
+   ```bash
+   git clone https://github.com/yourusername/habit_tracker.git
+   cd habit_tracker

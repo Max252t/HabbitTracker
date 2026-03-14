@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:habbit_tracker/blocs/habits/habits_bloc.dart';
+import 'package:habbit_tracker/core/app_logger.dart';
 
 class MapPage extends StatelessWidget {
   const MapPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    appLogger.i('[MapPage] build');
+    return BlocBuilder<HabitsBloc, HabitsState>(
+      builder: (context, state) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -31,7 +37,7 @@ class MapPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(
-                'Здесь будет карта для выбора точки и радиуса (геозона).',
+                'Тут отображаются напоминалки с выбранной точкой.',
                 style: Theme.of(context)
                     .textTheme
                     .labelSmall
@@ -40,20 +46,19 @@ class MapPage extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
                   color: Colors.white.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Center(
-                  child: Text(
-                    'Map SDK подключим следующим шагом\n(Yandex / Google)',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: const Color(0xFF3F414E)),
+                  child: Center(
+                    child: Text(
+                      'Карта временно отключена.\nМетки напоминалок не отображаются.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: const Color(0xFF3F414E)),
+                    ),
                   ),
                 ),
               ),
@@ -61,6 +66,8 @@ class MapPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }
