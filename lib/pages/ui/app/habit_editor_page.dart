@@ -1,9 +1,11 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:habbit_tracker/blocs/habits/habits_bloc.dart';
 import 'package:habbit_tracker/core/app_logger.dart';
 import 'package:habbit_tracker/domain/habit_reminder.dart';
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 class HabitEditorPage extends StatefulWidget {
   final HabitReminder? initial;
@@ -19,6 +21,8 @@ class _HabitEditorPageState extends State<HabitEditorPage> {
 
   DateTime? _scheduledAt;
   double _radius = 150;
+  Point? _location;
+  YandexMapController? _mapController;
 
   @override
   void initState() {
@@ -27,6 +31,38 @@ class _HabitEditorPageState extends State<HabitEditorPage> {
     _title = TextEditingController(text: widget.initial?.title ?? '');
     _scheduledAt = widget.initial?.scheduledAt;
     _radius = widget.initial?.radiusMeters ?? 150;
+
+    final lat = widget.initial?.latitude;
+    final lon = widget.initial?.longitude;
+    if (lat != null && lon != null) {
+      _location = Point(latitude: lat, longitude: lon);
+    }
+  }
+
+  List<MapObject> get _mapObjects {
+    if (_location == null) return const [];
+
+    return [
+      PlacemarkMapObject(
+        mapId: const MapObjectId('habit_point'),
+        point: _location!,
+        icon: PlacemarkIcon.single(
+          PlacemarkIconStyle(
+            image: BitmapDescriptor.fromAssetImage('assets/images/backround_sign.png'),
+          ),
+        ),
+      ),
+      CircleMapObject(
+        mapId: const MapObjectId('habit_radius'),
+        circle: Circle(
+          center: _location!,
+          radius: _radius,
+        ),
+        strokeColor: const Color(0xFF8E97FD).withOpacity(0.9),
+        strokeWidth: 2,
+        fillColor: const Color(0xFF8E97FD).withOpacity(0.2),
+      ),
+    ];
   }
 
   @override
@@ -43,18 +79,94 @@ class _HabitEditorPageState extends State<HabitEditorPage> {
 
   Future<void> _pickDateTime() async {
     final now = DateTime.now();
-    appLogger.i('[HabitEditorPage] pickDateTime start now=$now scheduledAt=$_scheduledAt');
+    final initial = _scheduledAt ?? now;
+
+    appLogger
+        .i('[HabitEditorPage] pickDateTime start now=$now scheduledAt=$_scheduledAt');
+
+    final theme = Theme.of(context);
+    final media = MediaQuery.of(context);
+    final isWide = media.size.width > 600;
+
+    // Адаптивный выбор даты: на широких экранах – центрированный диалог,
+    // на телефонах – аккуратный мобильный диалог без обрезания чисел.
     final date = await showDatePicker(
       context: context,
-      initialDate: _scheduledAt ?? now,
+      initialDate: initial,
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+
+        // Отдельно уменьшаем масштаб текста только внутри диалога,
+        // чтобы наш основной текст в приложении не менялся.
+        final scaledMedia = media.copyWith(
+          textScaler: const TextScaler.linear(0.7),
+        );
+
+        Widget picker = Theme(
+          data: theme.copyWith(
+            platform: TargetPlatform.android, // единый внешний вид
+          ),
+          child: MediaQuery(
+            data: scaledMedia,
+            child: child,
+          ),
+        );
+
+        if (!isWide) {
+          // Телефон/узкий экран
+          return picker;
+        }
+
+        // Десктоп/широкий экран – плюс ограничиваем ширину и высоту.
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+              maxHeight: 500,
+            ),
+            child: picker,
+          ),
+        );
+      },
     );
     if (date == null) return;
 
+    // Адаптивный выбор времени с теми же принципами.
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_scheduledAt ?? now),
+      initialTime: TimeOfDay.fromDateTime(initial),
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+
+        final scaledMedia = media.copyWith(
+          textScaler: const TextScaler.linear(0.7),
+        );
+
+        Widget picker = Theme(
+          data: theme.copyWith(
+            platform: TargetPlatform.android,
+          ),
+          child: MediaQuery(
+            data: scaledMedia,
+            child: child,
+          ),
+        );
+
+        if (!isWide) {
+          return picker;
+        }
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: picker,
+          ),
+        );
+      },
     );
     if (time == null) return;
 
@@ -88,8 +200,8 @@ class _HabitEditorPageState extends State<HabitEditorPage> {
       id: id,
       title: title,
       scheduledAt: _scheduledAt,
-      latitude: widget.initial?.latitude,
-      longitude: widget.initial?.longitude,
+      latitude: _location?.latitude,
+      longitude: _location?.longitude,
       radiusMeters: _radius,
     );
 
@@ -173,18 +285,56 @@ class _HabitEditorPageState extends State<HabitEditorPage> {
                   height: 360,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      child: Center(
-                        child: Text(
-                          'Карта временно отключена.\nВыбор точки недоступен.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: const Color(0xFF3F414E)),
-                        ),
-                      ),
+                    child: YandexMap(
+                      onMapCreated: (controller) async {
+                        _mapController = controller;
+                        
+                        Point target = const Point(
+                          latitude: 55.751244,
+                          longitude: 37.618423,
+                        );
+
+                        if (_location != null) {
+                          target = _location!;
+                        } else {
+                          try {
+                            LocationPermission permission = await Geolocator.checkPermission();
+                            if (permission == LocationPermission.denied) {
+                              permission = await Geolocator.requestPermission();
+                            }
+                            
+                            if (permission == LocationPermission.whileInUse || 
+                                permission == LocationPermission.always) {
+                              final position = await Geolocator.getCurrentPosition();
+                              target = Point(
+                                latitude: position.latitude, 
+                                longitude: position.longitude,
+                              );
+                            }
+                          } catch (e) {
+                            appLogger.e('Ошибка получения геолокации: $e');
+                          }
+                        }
+
+                        await _mapController?.moveCamera(
+                          CameraUpdate.newCameraPosition(
+                            CameraPosition(target: target, zoom: 14),
+                          ),
+                        );
+
+                        await _mapController?.toggleUserLayer(visible: true);
+                      },
+                      mapObjects: _mapObjects,
+                      onMapTap: (point) async {
+                        setState(() {
+                          _location = point;
+                        });
+                        await _mapController?.moveCamera(
+                          CameraUpdate.newCameraPosition(
+                            CameraPosition(target: point, zoom: 15),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
